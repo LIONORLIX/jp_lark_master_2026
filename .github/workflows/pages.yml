@@ -45,24 +45,46 @@ jobs:
           SITE_TITLE: ${{ secrets.SITE_TITLE }}
           LARK_HTTP_TIMEOUT_MS: ${{ secrets.LARK_HTTP_TIMEOUT_MS }}
         run: |
+          set_env() {
+            key="$1"
+            value="$2"
+            if [ -n "$value" ]; then
+              grep -v "^${key}=" .env > .env.tmp || true
+              mv .env.tmp .env
+              printf "%s=%s\n" "$key" "$value" >> .env
+            fi
+          }
+
+          default_env() {
+            key="$1"
+            value="$2"
+            if ! grep -q "^${key}=" .env; then
+              printf "%s=%s\n" "$key" "$value" >> .env
+            fi
+          }
+
           if [ -n "$REIMAGINE" ]; then
             # Backward compatible: one repository secret named REIMAGINE with lines like KEY=value.
             printf "%s" "$REIMAGINE" > .env
           else
-            # Preferred: repository/environment secrets named the same as the runtime env vars.
-            {
-              printf "LARK_APP_ID=%s\n" "$LARK_APP_ID"
-              printf "LARK_APP_SECRET=%s\n" "$LARK_APP_SECRET"
-              printf "BITABLE_APP_TOKEN=%s\n" "$BITABLE_APP_TOKEN"
-              printf "BITABLE_PHOTO_FIELD=%s\n" "$BITABLE_PHOTO_FIELD"
-              printf "BITABLE_TABLE_ID=%s\n" "$BITABLE_TABLE_ID"
-              printf "BITABLE_TABLES=%s\n" "$BITABLE_TABLES"
-              printf "BITABLE_CATEGORY_FIELD=%s\n" "$BITABLE_CATEGORY_FIELD"
-              printf "CATEGORIES=%s\n" "${CATEGORIES:-Foyer,Main session,Room 1 - Ops track,Room 2 - Tech track}"
-              printf "SITE_TITLE=%s\n" "${SITE_TITLE:-Reimagine 2026 Photo}"
-              printf "LARK_HTTP_TIMEOUT_MS=%s\n" "${LARK_HTTP_TIMEOUT_MS:-60000}"
-            } > .env
+            : > .env
           fi
+
+          # Preferred: repository/environment secrets named the same as the runtime env vars.
+          # These override values from REIMAGINE when both are configured.
+          set_env "LARK_APP_ID" "$LARK_APP_ID"
+          set_env "LARK_APP_SECRET" "$LARK_APP_SECRET"
+          set_env "BITABLE_APP_TOKEN" "$BITABLE_APP_TOKEN"
+          set_env "BITABLE_PHOTO_FIELD" "$BITABLE_PHOTO_FIELD"
+          set_env "BITABLE_TABLE_ID" "$BITABLE_TABLE_ID"
+          set_env "BITABLE_TABLES" "$BITABLE_TABLES"
+          set_env "BITABLE_CATEGORY_FIELD" "$BITABLE_CATEGORY_FIELD"
+          set_env "CATEGORIES" "$CATEGORIES"
+          set_env "SITE_TITLE" "$SITE_TITLE"
+          set_env "LARK_HTTP_TIMEOUT_MS" "$LARK_HTTP_TIMEOUT_MS"
+          default_env "CATEGORIES" "Foyer,Main session,Room 1 - Ops track,Room 2 - Tech track"
+          default_env "SITE_TITLE" "Reimagine 2026 Photo"
+          default_env "LARK_HTTP_TIMEOUT_MS" "60000"
 
           missing=0
           for key in LARK_APP_ID LARK_APP_SECRET BITABLE_APP_TOKEN BITABLE_PHOTO_FIELD; do
