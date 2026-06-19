@@ -33,17 +33,17 @@ jobs:
 
       - name: Create .env from GitHub Secrets
         env:
-          REIMAGINE: ${{ secrets.REIMAGINE }}
-          LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
-          LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET }}
-          BITABLE_APP_TOKEN: ${{ secrets.BITABLE_APP_TOKEN }}
-          BITABLE_PHOTO_FIELD: ${{ secrets.BITABLE_PHOTO_FIELD }}
-          BITABLE_TABLE_ID: ${{ secrets.BITABLE_TABLE_ID }}
-          BITABLE_TABLES: ${{ secrets.BITABLE_TABLES }}
-          BITABLE_CATEGORY_FIELD: ${{ secrets.BITABLE_CATEGORY_FIELD }}
-          CATEGORIES: ${{ secrets.CATEGORIES }}
-          SITE_TITLE: ${{ secrets.SITE_TITLE }}
-          LARK_HTTP_TIMEOUT_MS: ${{ secrets.LARK_HTTP_TIMEOUT_MS }}
+          REIMAGINE: ${{ secrets.REIMAGINE || vars.REIMAGINE }}
+          LARK_APP_ID: ${{ secrets.LARK_APP_ID || vars.LARK_APP_ID }}
+          LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET || vars.LARK_APP_SECRET }}
+          BITABLE_APP_TOKEN: ${{ secrets.BITABLE_APP_TOKEN || vars.BITABLE_APP_TOKEN }}
+          BITABLE_PHOTO_FIELD: ${{ secrets.BITABLE_PHOTO_FIELD || vars.BITABLE_PHOTO_FIELD }}
+          BITABLE_TABLE_ID: ${{ secrets.BITABLE_TABLE_ID || vars.BITABLE_TABLE_ID }}
+          BITABLE_TABLES: ${{ secrets.BITABLE_TABLES || vars.BITABLE_TABLES }}
+          BITABLE_CATEGORY_FIELD: ${{ secrets.BITABLE_CATEGORY_FIELD || vars.BITABLE_CATEGORY_FIELD }}
+          CATEGORIES: ${{ secrets.CATEGORIES || vars.CATEGORIES }}
+          SITE_TITLE: ${{ secrets.SITE_TITLE || vars.SITE_TITLE }}
+          LARK_HTTP_TIMEOUT_MS: ${{ secrets.LARK_HTTP_TIMEOUT_MS || vars.LARK_HTTP_TIMEOUT_MS }}
         run: |
           set_env() {
             key="$1"
