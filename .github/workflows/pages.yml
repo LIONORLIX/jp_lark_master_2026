@@ -31,17 +31,53 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Create .env from GitHub Secret
+      - name: Create .env from GitHub Secrets
         env:
           REIMAGINE: ${{ secrets.REIMAGINE }}
+          LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
+          LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET }}
+          BITABLE_APP_TOKEN: ${{ secrets.BITABLE_APP_TOKEN }}
+          BITABLE_PHOTO_FIELD: ${{ secrets.BITABLE_PHOTO_FIELD }}
+          BITABLE_TABLE_ID: ${{ secrets.BITABLE_TABLE_ID }}
+          BITABLE_TABLES: ${{ secrets.BITABLE_TABLES }}
+          BITABLE_CATEGORY_FIELD: ${{ secrets.BITABLE_CATEGORY_FIELD }}
+          CATEGORIES: ${{ secrets.CATEGORIES }}
+          SITE_TITLE: ${{ secrets.SITE_TITLE }}
+          LARK_HTTP_TIMEOUT_MS: ${{ secrets.LARK_HTTP_TIMEOUT_MS }}
         run: |
-          if [ -z "$REIMAGINE" ]; then
-            echo "Missing secret: REIMAGINE"
-            echo "Please create a repository secret named REIMAGINE with lines like KEY=value (same as your local .env)."
+          if [ -n "$REIMAGINE" ]; then
+            # Backward compatible: one repository secret named REIMAGINE with lines like KEY=value.
+            printf "%s" "$REIMAGINE" > .env
+          else
+            # Preferred: repository/environment secrets named the same as the runtime env vars.
+            {
+              printf "LARK_APP_ID=%s\n" "$LARK_APP_ID"
+              printf "LARK_APP_SECRET=%s\n" "$LARK_APP_SECRET"
+              printf "BITABLE_APP_TOKEN=%s\n" "$BITABLE_APP_TOKEN"
+              printf "BITABLE_PHOTO_FIELD=%s\n" "$BITABLE_PHOTO_FIELD"
+              printf "BITABLE_TABLE_ID=%s\n" "$BITABLE_TABLE_ID"
+              printf "BITABLE_TABLES=%s\n" "$BITABLE_TABLES"
+              printf "BITABLE_CATEGORY_FIELD=%s\n" "$BITABLE_CATEGORY_FIELD"
+              printf "CATEGORIES=%s\n" "${CATEGORIES:-Foyer,Main session,Room 1 - Ops track,Room 2 - Tech track}"
+              printf "SITE_TITLE=%s\n" "${SITE_TITLE:-Reimagine 2026 Photo}"
+              printf "LARK_HTTP_TIMEOUT_MS=%s\n" "${LARK_HTTP_TIMEOUT_MS:-60000}"
+            } > .env
+          fi
+
+          missing=0
+          for key in LARK_APP_ID LARK_APP_SECRET BITABLE_APP_TOKEN BITABLE_PHOTO_FIELD; do
+            if ! grep -q "^${key}=.\+" .env; then
+              echo "Missing env: ${key}"
+              missing=1
+            fi
+          done
+          if ! grep -q "^BITABLE_TABLE_ID=.\+" .env && ! grep -q "^BITABLE_TABLES=.\+" .env; then
+            echo "Missing env: BITABLE_TABLE_ID (or BITABLE_TABLES)"
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
             exit 1
           fi
-          # Write without leaking to logs
-          printf "%s" "$REIMAGINE" > .env
 
       - name: Fetch from Lark Base
         run: npm run fetch
@@ -64,4 +100,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
