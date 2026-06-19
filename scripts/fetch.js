@@ -309,12 +309,24 @@ async function collectDriveFiles(folder, { recursive }) {
 async function fetchFromDrive() {
   const folders = parseDriveFoldersEnv();
   const recursive = /^(1|true|yes)$/i.test(process.env.DRIVE_RECURSIVE || "");
+  const categoryMode = (process.env.DRIVE_CATEGORY_MODE || "").trim().toLowerCase();
   const allFiles = [];
+  const categoryNames = [];
   for (const folder of folders) {
     const children = await listDriveFolderChildren(folder.id);
     for (const child of children) {
       const token = getDriveFileToken(child);
       if (!token) continue;
+      if (categoryMode === "subfolders" && isDriveFolder(child)) {
+        const categoryFolder = {
+          name: normalizeCategoryName(getDriveFileName(child) || folder.name),
+          id: token
+        };
+        categoryNames.push(categoryFolder.name);
+        const nested = await collectDriveFiles(categoryFolder, { recursive: true });
+        allFiles.push(...nested);
+        continue;
+      }
       if (recursive && isDriveFolder(child)) {
         const nested = await collectDriveFiles({ ...folder, id: token }, { recursive });
         for (const f of nested) allFiles.push({ ...f, __folder_name: folder.name, __folder_id: folder.id });
@@ -323,9 +335,10 @@ async function fetchFromDrive() {
       if (!isDriveImage(child)) continue;
       allFiles.push({ ...child, __folder_name: folder.name, __folder_id: folder.id });
     }
+    if (categoryMode !== "subfolders") categoryNames.push(normalizeCategoryName(folder.name));
   }
 
-  const categories = folders.map((f) => normalizeCategoryName(f.name));
+  const categories = [...new Set(categoryNames)];
   const out = {
     generated_at: new Date().toISOString(),
     source: "drive",

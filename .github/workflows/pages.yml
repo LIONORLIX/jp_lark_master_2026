@@ -46,6 +46,7 @@ jobs:
           DRIVE_FOLDERS: ${{ secrets.DRIVE_FOLDERS || vars.DRIVE_FOLDERS }}
           DRIVE_FOLDER_TOKENS: ${{ secrets.DRIVE_FOLDER_TOKENS || vars.DRIVE_FOLDER_TOKENS }}
           DRIVE_CATEGORY: ${{ secrets.DRIVE_CATEGORY || vars.DRIVE_CATEGORY }}
+          DRIVE_CATEGORY_MODE: ${{ secrets.DRIVE_CATEGORY_MODE || vars.DRIVE_CATEGORY_MODE }}
           DRIVE_RECURSIVE: ${{ secrets.DRIVE_RECURSIVE || vars.DRIVE_RECURSIVE }}
           CATEGORIES: ${{ secrets.CATEGORIES || vars.CATEGORIES }}
           SITE_TITLE: ${{ secrets.SITE_TITLE || vars.SITE_TITLE }}
@@ -90,6 +91,7 @@ jobs:
           set_env "DRIVE_FOLDERS" "$DRIVE_FOLDERS"
           set_env "DRIVE_FOLDER_TOKENS" "$DRIVE_FOLDER_TOKENS"
           set_env "DRIVE_CATEGORY" "$DRIVE_CATEGORY"
+          set_env "DRIVE_CATEGORY_MODE" "$DRIVE_CATEGORY_MODE"
           set_env "DRIVE_RECURSIVE" "$DRIVE_RECURSIVE"
           set_env "CATEGORIES" "$CATEGORIES"
           set_env "SITE_TITLE" "$SITE_TITLE"
