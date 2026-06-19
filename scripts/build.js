@@ -36,6 +36,7 @@ function renderIndex({ title = "Reimagine 2026 Photo" } = {}) {
         color-scheme: light;
         --nav-h: 34px;
         --nav-gap: 8px;
+        --banner-h: clamp(180px, 28vw, 380px);
         /* Painted height of sticky nav (padding + row + border); use for tab bar offset on mobile */
         --nav-bar-outer: calc(6px + var(--nav-h) + 6px + 1px);
       }
@@ -73,12 +74,15 @@ function renderIndex({ title = "Reimagine 2026 Photo" } = {}) {
       .nav a { display:flex; align-items:center; gap:10px; }
       .nav img { height: 20px; width:auto; display:block; }
       .banner {
-        width: 100%;
+        width: 100vw;
+        height: var(--banner-h);
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
         margin-bottom: 24px;
         line-height: 0;
         font-size: 0;
         overflow: hidden;
-        border-radius: 14px;
+        border-radius: 0;
         background: #0b0d12;
       }
       .banner img { 
@@ -86,7 +90,7 @@ function renderIndex({ title = "Reimagine 2026 Photo" } = {}) {
         height: 100%;
         display: block; 
         vertical-align: middle;
-        object-fit: cover;
+        object-fit: contain;
         /* Avoid 1px hairlines from subpixel scaling */
         transform: translateZ(0) scale(1.01);
         transform-origin: center;
@@ -108,6 +112,7 @@ function renderIndex({ title = "Reimagine 2026 Photo" } = {}) {
       @media (min-width: 720px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; grid-auto-rows: 170px; } }
       @media (min-width: 1024px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
       @media (max-width: 720px) {
+        :root { --banner-h: clamp(140px, 42vw, 240px); }
         .nav { margin-bottom: 0; }
         .layout { flex-direction: column; }
         .sidebar {
@@ -458,4 +463,3 @@ function main() {
 }
 
 main();
-
