@@ -34,6 +34,7 @@ jobs:
       - name: Create .env from GitHub Secrets
         env:
           REIMAGINE: ${{ secrets.REIMAGINE || vars.REIMAGINE }}
+          PHOTO_SOURCE: ${{ secrets.PHOTO_SOURCE || vars.PHOTO_SOURCE }}
           LARK_APP_ID: ${{ secrets.LARK_APP_ID || vars.LARK_APP_ID }}
           LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET || vars.LARK_APP_SECRET }}
           BITABLE_APP_TOKEN: ${{ secrets.BITABLE_APP_TOKEN || vars.BITABLE_APP_TOKEN }}
@@ -41,6 +42,11 @@ jobs:
           BITABLE_TABLE_ID: ${{ secrets.BITABLE_TABLE_ID || vars.BITABLE_TABLE_ID }}
           BITABLE_TABLES: ${{ secrets.BITABLE_TABLES || vars.BITABLE_TABLES }}
           BITABLE_CATEGORY_FIELD: ${{ secrets.BITABLE_CATEGORY_FIELD || vars.BITABLE_CATEGORY_FIELD }}
+          DRIVE_FOLDER_TOKEN: ${{ secrets.DRIVE_FOLDER_TOKEN || vars.DRIVE_FOLDER_TOKEN }}
+          DRIVE_FOLDERS: ${{ secrets.DRIVE_FOLDERS || vars.DRIVE_FOLDERS }}
+          DRIVE_FOLDER_TOKENS: ${{ secrets.DRIVE_FOLDER_TOKENS || vars.DRIVE_FOLDER_TOKENS }}
+          DRIVE_CATEGORY: ${{ secrets.DRIVE_CATEGORY || vars.DRIVE_CATEGORY }}
+          DRIVE_RECURSIVE: ${{ secrets.DRIVE_RECURSIVE || vars.DRIVE_RECURSIVE }}
           CATEGORIES: ${{ secrets.CATEGORIES || vars.CATEGORIES }}
           SITE_TITLE: ${{ secrets.SITE_TITLE || vars.SITE_TITLE }}
           LARK_HTTP_TIMEOUT_MS: ${{ secrets.LARK_HTTP_TIMEOUT_MS || vars.LARK_HTTP_TIMEOUT_MS }}
@@ -72,6 +78,7 @@ jobs:
 
           # Preferred: repository/environment secrets named the same as the runtime env vars.
           # These override values from REIMAGINE when both are configured.
+          set_env "PHOTO_SOURCE" "$PHOTO_SOURCE"
           set_env "LARK_APP_ID" "$LARK_APP_ID"
           set_env "LARK_APP_SECRET" "$LARK_APP_SECRET"
           set_env "BITABLE_APP_TOKEN" "$BITABLE_APP_TOKEN"
@@ -79,23 +86,52 @@ jobs:
           set_env "BITABLE_TABLE_ID" "$BITABLE_TABLE_ID"
           set_env "BITABLE_TABLES" "$BITABLE_TABLES"
           set_env "BITABLE_CATEGORY_FIELD" "$BITABLE_CATEGORY_FIELD"
+          set_env "DRIVE_FOLDER_TOKEN" "$DRIVE_FOLDER_TOKEN"
+          set_env "DRIVE_FOLDERS" "$DRIVE_FOLDERS"
+          set_env "DRIVE_FOLDER_TOKENS" "$DRIVE_FOLDER_TOKENS"
+          set_env "DRIVE_CATEGORY" "$DRIVE_CATEGORY"
+          set_env "DRIVE_RECURSIVE" "$DRIVE_RECURSIVE"
           set_env "CATEGORIES" "$CATEGORIES"
           set_env "SITE_TITLE" "$SITE_TITLE"
           set_env "LARK_HTTP_TIMEOUT_MS" "$LARK_HTTP_TIMEOUT_MS"
+          default_env "PHOTO_SOURCE" "base"
           default_env "CATEGORIES" "Foyer,Main session,Room 1 - Ops track,Room 2 - Tech track"
           default_env "SITE_TITLE" "Reimagine 2026 Photo"
           default_env "LARK_HTTP_TIMEOUT_MS" "60000"
 
           missing=0
-          for key in LARK_APP_ID LARK_APP_SECRET BITABLE_APP_TOKEN BITABLE_PHOTO_FIELD; do
+          for key in LARK_APP_ID LARK_APP_SECRET; do
             if ! grep -q "^${key}=.\+" .env; then
               echo "Missing env: ${key}"
               missing=1
             fi
           done
-          if ! grep -q "^BITABLE_TABLE_ID=.\+" .env && ! grep -q "^BITABLE_TABLES=.\+" .env; then
-            echo "Missing env: BITABLE_TABLE_ID (or BITABLE_TABLES)"
-            missing=1
+
+          source="$(grep '^PHOTO_SOURCE=' .env | tail -n1 | cut -d= -f2-)"
+          if [ "$source" = "auto" ]; then
+            if grep -q "^DRIVE_FOLDER_TOKEN=.\+" .env || grep -q "^DRIVE_FOLDERS=.\+" .env || grep -q "^DRIVE_FOLDER_TOKENS=.\+" .env; then
+              source="drive"
+            else
+              source="base"
+            fi
+          fi
+
+          if [ "$source" = "drive" ] || [ "$source" = "folder" ]; then
+            if ! grep -q "^DRIVE_FOLDER_TOKEN=.\+" .env && ! grep -q "^DRIVE_FOLDERS=.\+" .env && ! grep -q "^DRIVE_FOLDER_TOKENS=.\+" .env; then
+              echo "Missing env: DRIVE_FOLDER_TOKEN (or DRIVE_FOLDERS)"
+              missing=1
+            fi
+          else
+            for key in BITABLE_APP_TOKEN BITABLE_PHOTO_FIELD; do
+              if ! grep -q "^${key}=.\+" .env; then
+                echo "Missing env: ${key}"
+                missing=1
+              fi
+            done
+            if ! grep -q "^BITABLE_TABLE_ID=.\+" .env && ! grep -q "^BITABLE_TABLES=.\+" .env; then
+              echo "Missing env: BITABLE_TABLE_ID (or BITABLE_TABLES)"
+              missing=1
+            fi
           fi
           if [ "$missing" -ne 0 ]; then
             exit 1
